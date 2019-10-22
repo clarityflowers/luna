@@ -1,0 +1,130 @@
+
+local function metropolis_basic(state, x, y, max_width)
+  local flow_x = x
+
+  local max_width = love.graphics.getWidth() - flow_x
+  local BAR_WIDTH = 10
+  local STEP_WIDTH = BAR_WIDTH + 31
+
+  local x_pad = (max_width - (#state.steps * STEP_WIDTH)) / 2
+  local total_y = y
+
+  for i, step in pairs(state.steps) do
+    local note, pulse_count, gate_mode, slide, skip = unpack(step)
+    local pitch = (note[1] * 8 + note[2] + note[3] * 0.5) * 1.5
+    
+    local flow_y = y
+
+    local x_pos = flow_x + x_pad + (STEP_WIDTH * (i - 1))
+
+    -- selected
+    if state.selected_step == i then
+      love.graphics.setColor(0, 0, 0)
+      love.graphics.circle("fill", x_pos + 5, flow_y, 5)
+    end
+    flow_y = flow_y + 10 + 5
+
+    -- note track
+    local PITCH_HEIGHT = 100
+    local pitch_y_pos = flow_y + (PITCH_HEIGHT - pitch)
+    if skip then
+      love.graphics.setColor(0.75, 0.75, 0.75)
+    else
+      love.graphics.setColor(0.6, 0.6, 0.6)
+    end
+    love.graphics.rectangle("fill", x_pos, flow_y, BAR_WIDTH, PITCH_HEIGHT)
+
+    -- note
+    if state.step == i and state.playing then
+      love.graphics.setColor(1, 0, 0)
+    elseif skip then
+      love.graphics.setColor(0.7, 0.7, 0.7)
+    elseif gate_mode == 1 then
+      love.graphics.setColor(0.5, 0.5, 0.5)
+    else
+      love.graphics.setColor(0, 0, 0)
+    end
+    love.graphics.rectangle("fill", x_pos, pitch_y_pos, BAR_WIDTH, BAR_WIDTH)
+    love.graphics.setColor(0, 0, 0)
+    flow_y = flow_y + PITCH_HEIGHT + 2
+    love.graphics.printf(i, x_pos - 2, flow_y, 14, "center")
+    flow_y = flow_y + 28
+    
+    -- pulse count
+    local MAX_PULSES = 8
+    local PULSE_HEIGHT = BAR_WIDTH * MAX_PULSES
+    love.graphics.setColor(0.6, 0.6, 0.6)
+    love.graphics.rectangle("fill", x_pos, flow_y, BAR_WIDTH, PULSE_HEIGHT)
+    love.graphics.setColor(0, 0, 0)
+    for x = 1, MAX_PULSES, 1 do
+      local pulse_y_pos = flow_y + PULSE_HEIGHT - BAR_WIDTH - ((x - 1) * BAR_WIDTH)
+      if pulse_count == x then
+        love.graphics.rectangle("fill", x_pos, pulse_y_pos, BAR_WIDTH, BAR_WIDTH)
+      end
+      love.graphics.printf(x, x_pos + BAR_WIDTH + 1, pulse_y_pos, BAR_WIDTH, "center")
+    end
+    flow_y = flow_y + PULSE_HEIGHT + 20
+
+    -- gate mode
+    local MAX_MODES = 4
+    local GATE_HEIGHT = MAX_MODES * BAR_WIDTH
+    local G_PAD = 2
+    love.graphics.setColor(0.6, 0.6, 0.6)
+    love.graphics.rectangle("fill", x_pos, flow_y, BAR_WIDTH, GATE_HEIGHT)
+    love.graphics.setColor(0, 0, 0)
+    for x = 1, 4, 1 do
+      local gate_y_pos = flow_y + GATE_HEIGHT - BAR_WIDTH - ((x - 1) * BAR_WIDTH)
+      if gate_mode == x then
+        love.graphics.rectangle("fill", x_pos, gate_y_pos, BAR_WIDTH, BAR_WIDTH)
+      end
+      love.graphics.setColor(0, 0, 0)
+      if x == 2 then
+        love.graphics.rectangle(
+          "fill",
+          x_pos + BAR_WIDTH + G_PAD,
+          gate_y_pos + G_PAD,
+          5,
+          BAR_WIDTH - (G_PAD * 2)
+        )
+      end
+      if x == 3 then
+        for xx = 0, 3, 1 do
+          love.graphics.rectangle(
+            "fill",
+            x_pos + BAR_WIDTH + G_PAD + (xx * 7),
+            gate_y_pos + G_PAD,
+            5,
+            BAR_WIDTH - (G_PAD * 2)
+          )
+        end
+      end
+      if x == 4 then
+        love.graphics.rectangle(
+          "fill",
+          x_pos + BAR_WIDTH + G_PAD,
+          gate_y_pos + G_PAD,
+          26,
+          BAR_WIDTH - (G_PAD * 2)
+        )
+      end
+    end
+    flow_y = flow_y + GATE_HEIGHT + 20
+
+    -- slide/skip
+
+    if skip then
+      love.graphics.setColor(1, 0, 0)
+    elseif slide then
+      love.graphics.setColor(0, 0, 1)
+    else 
+      love.graphics.setColor(0.6, 0.6, 0.6)
+    end
+    love.graphics.circle("fill", x_pos + BAR_WIDTH / 2, flow_y, BAR_WIDTH / 2)
+
+    flow_y = flow_y + BAR_WIDTH
+    if flow_y > total_y then
+      total_y = flow_y
+    end
+  end
+  return total_y
+end
