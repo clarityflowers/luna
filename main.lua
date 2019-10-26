@@ -20,6 +20,7 @@ local blur = love.graphics.newShader[[
   }
 ]]
 local canvas
+local midiinput
   
 
 function love.load()
@@ -40,16 +41,17 @@ function love.load()
     }
   )
 
+  midiinput = love.thread.newChannel()
+  midiout = love.thread.newChannel()
+
   state = {
     midi = nil,
-    data = 0,
     inputs = {},
-    midiinput = love.thread.newChannel()
+    ui = {}
   }
 
-  midiout = love.thread.newChannel()
   midithread = love.thread.newThread("midiloader.lua")
-  midithread:start(midiout, state.midiinput)
+  midithread:start(midiout, midiinput)
 
   draw = livereload.init("draw.lua")
 
@@ -58,8 +60,9 @@ function love.load()
 end
 
 function love.quit()
+  print("Quit")
   if state.midi then
-    state.midiinput:push({ "quit" })
+    midiinput:push({ "quit" })
     midithread:wait()
   end
 end
@@ -82,10 +85,7 @@ function love.update_and_draw(dt)
 
 
   
-  local result = draw.run(state, dt, blur, canvas)
-  if result then
-    state = result
-  end
+  draw.run(state, dt, midiinput, blur, canvas)
 end
 
 function love.run()
@@ -121,7 +121,8 @@ function love.run()
       if love.update_and_draw then love.update_and_draw(dt) end
 
       love.graphics.present()
-		end
+    end
+    
 
 		if love.timer then love.timer.sleep(0.017 - dt) end
   end

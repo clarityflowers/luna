@@ -1,7 +1,7 @@
 local tools = {}
 local constants = require("livereload2").init("draw_constants.lua")
 
-function tools.drawStaffLines(x, flow_y, width, cleff, octave, fonts, play)
+function tools.drawStaffLines(x, flow_y, width, cleff, octave, play)
   love.graphics.setLineWidth(1)
   local staff_top = flow_y
   for i = 0, 4, 1 do
@@ -36,7 +36,7 @@ function tools.drawStaffLines(x, flow_y, width, cleff, octave, fonts, play)
 
   -- octave marker
 
-  love.graphics.setFont(fonts.text_font)
+  love.graphics.setFont(constants.text_font)
   if octave > 0 then
     local octave_x = x
     local octave_y = staff_top - 14

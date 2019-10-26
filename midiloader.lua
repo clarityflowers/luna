@@ -13,16 +13,13 @@ local function setChannel(channel, value)
   channel:push(value)
 end
 
-local time = timer.getTime()
+local time = nil
 
-local module = livereload.init("midi.lua")
+local module = livereload.init("rack.lua")
 local running = true
 
 while running do
-  local newtime = timer.getTime()
-  local dt = newtime - time
-  time = newtime
-
+  local start_time = timer.getTime()
   local inputs = {}
   while true do
     local input = midiinput:pop()
@@ -32,14 +29,21 @@ while running do
       break
     end
   end
-  local result = module.run(state, dt, inputs)
+
+  local newtime = timer.getTime()
+  local dt = newtime - (time or newtime)
+  time = newtime
+  
+  local result = module.update(state, dt, inputs)
   if result == "quit" then
     running = false
   else
-    state = result
+    midiout:performAtomic(setChannel, result)
   end
+  
+  
+  local end_time = timer.getTime()
+  local loop_dt = end_time - start_time
 
-  midiout:performAtomic(setChannel, state)
-
-  timer.sleep(0.008 - dt)
+  timer.sleep(0.001 - loop_dt)
 end
