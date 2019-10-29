@@ -108,9 +108,6 @@ end
   sequence: step[]
 ]]
 function modules.sequencer(state, props)
-  utils.defaults(state, {
-    position = 1
-  })
   props = utils.idefaults(props, {
     clock = {
       beat = 0,
@@ -120,6 +117,10 @@ function modules.sequencer(state, props)
     },
     gate_time = 0.5,
     sequence = {}
+  })
+  utils.defaults(state, {
+    position = 1,
+    gate_time = props.gate_time
   })
   local sequence = utils.copy(props.sequence)
   if #sequence == 0 then
@@ -131,6 +132,7 @@ function modules.sequencer(state, props)
   local click = clock.beat > clock.prev_beat
   if click then
     state.position = state.position + 1
+    state.gate_time = props.gate_time
   end
   if state.position > #sequence then
     state.position = 1
@@ -138,7 +140,7 @@ function modules.sequencer(state, props)
   local step = utils.copy(sequence[state.position])
   sequence[state.position] = step
   if step.note then
-    if clock.fraction <= props.gate_time then
+    if clock.fraction <= state.gate_time then
       table.insert(events, {
         type = "note",
         note = step.note,

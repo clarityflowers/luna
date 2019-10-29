@@ -223,7 +223,7 @@ function rack.update(state, dt, inputs)
   local music_events
   music_events, render.sequence = modules.sequencer(state.sequencer, {
     clock = render.clock,
-    gate_time = 0.8,
+    gate_time = math.random(),
     sequence = sequence
   })
 
