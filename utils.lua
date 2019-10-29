@@ -22,4 +22,20 @@ function utils.idefaults(state, props)
   return result
 end
 
+
+function utils.compress(array)
+  local x = 0
+  local i
+  for i=1, #array, 1 do
+    local v = array[i]
+    if v ~= nil then
+      x = x + 1
+      if i ~= x then
+        array[x] = v
+        array[i] = nil
+      end
+    end
+  end
+end
+
 return utils

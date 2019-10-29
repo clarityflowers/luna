@@ -1,6 +1,9 @@
 local livereload = require "livereload2"
 local utils = livereload.init('utils.lua')
 local modules = livereload.init('modules.lua')
+local notes = livereload.init('notes.lua')
+local constants = livereload.init 'midi_constants.lua'
+local tools = livereload.init 'miditools.lua'
 
 local rack = {}
 
@@ -33,8 +36,23 @@ step:
 
 local notes = livereload.init("notes.lua")
 
--- function modules.inKey(state, props)
+local function events_equal(a, b)
+  if a.time == b.time then
+    if a.type == "note" and b.type == "note" then
+      return notes.areEqual(a.note, b.note)          
+    end
+  end
+  return false
+end
 
+local function event_exists_in(event, events)
+  for _, other in ipairs(events) do
+    if events_equal(event, other) then
+      return true
+    end
+  end
+  return false
+end
 
 function modules.midiStream(state, props)
   utils.defaults(state, {
@@ -48,21 +66,71 @@ function modules.midiStream(state, props)
 
   local deleted = {}
 
+  local result = {}
+
   -- clear out no longer active events
   for i, event in ipairs(state.active) do
-    local exists = false
-    for _, in_event in ipairs(props.events) do
-      if event.time == in_event.time then
-        if event.type == "note" and in_event.type == "note" and notes.areEqual(event.note, in_event.note) then
-          exists = true          
-        end
-      end
-    end
-    if not exists then
+    if not event_exists_in(event, props.events) then
       table.insert(deleted, i)
-      -- if event.type == 
+      table.insert(result, {constants.NOTE_OFF, tools.toPitch(event.note), 0})
     end
   end
+  local count = 0
+  for _, i in ipairs(deleted) do
+    table.remove(state.active, i - count)
+    count = count + 1
+  end
+
+  -- insert new events
+  for i, event in ipairs(props.events) do
+    if not event_exists_in(event, state.active) then
+      table.insert(state.active, event)
+      table.insert(result, {constants.NOTE_ON, tools.toPitch(event.note), 127})
+    end
+  end
+  return result
+end
+
+function modules.recordMidiStream(state, props)
+  utils.defaults(state, {
+    recording = {}
+  })
+  props = utils.idefaults(props, {
+    stream = {},
+    clock = nil,
+    window = nil
+  })
+  local time = love.timer.getTime()
+  if props.clock then
+    time = props.clock.beat + props.clock.fraction
+  end
+  for _, message in ipairs(props.stream) do
+    table.insert(state.recording, {time, message})
+  end
+  if props.window ~= nil then
+    for i, record in ipairs(state.recording) do
+      local event_time = unpack(record)
+      if time - event_time > props.window then
+        state.recording[i] = nil
+      else
+        break
+      end
+    end
+    utils.compress(state.recording)
+  end
+  local start_time = 0
+  if props.window then
+    start_time = time - props.window
+  end
+  if state.recording[1] then
+    local time, message = unpack(state.recording[1])
+  end
+  
+  return {
+    start_time = start_time,
+    current_time = time,
+    events = state.recording
+  }
 end
 
 
@@ -70,7 +138,10 @@ function rack.update(state, dt, inputs)
   utils.defaults(state, {
     perf = {},
     clock = {},
-    sequencer = {}
+    sequencer = {},
+    inKey = {},
+    midiStream = {},
+    midiRecording = {}
   })
 
   local OUT = 0
@@ -89,16 +160,6 @@ function rack.update(state, dt, inputs)
 
   render.perf = modules.perf(state.perf, dt)
 
-
-  local tempo = {
-    bpm = 100,
-    multiplier = {1, 1}
-  }
-
-  render.clock = modules.clock(state.clock, {
-    tempo = tempo,
-    dt = dt
-  })
 
 
 
@@ -135,28 +196,56 @@ function rack.update(state, dt, inputs)
     --   !1 +2 +5 !1 ~~ +2 ~+7 __
     --   ...               ~+6 __
     -- ]]) 
-   
+
+
+
+  local tempo = {
+    bpm = 100,
+    multiplier = {1, 1}
+  }
+
+  render.clock = modules.clock(state.clock, {
+    tempo = tempo,
+    dt = dt
+  })
     
-  render.key = {-1, 1}
 
   local sequence = {
     {note = {0, 1}},
     {note = {0, 2}},
-    {note = {0, 5}, tie = true},
+    {note = {0, 3}},
+    {note = {0, 4}},
     {note = {0, 5}},
-    {note = {0, 1}, tie = true},
-    {note = {0, 1}, tie = true},
-    {note = {0, 1}},
-    {note = {0, 2}, tie = true},
+    {note = {0, 6}},
     {note = {0, 7}},
-    {},
   }
 
-  render.music_events, render.sequence = modules.sequencer(state.sequencer, {
+  local music_events
+  music_events, render.sequence = modules.sequencer(state.sequencer, {
     clock = render.clock,
-    gate_time = 0.5,
+    gate_time = 0.8,
     sequence = sequence
   })
+
+
+  render.key = {0, 6}
+  render.music_events = modules.inKey(state.inKey, {
+    events = music_events,
+    key = render.key
+  })
+
+  local midiStream = modules.midiStream(state.midiStream, {
+    events = render.music_events
+  })
+
+  render.midiRecording = modules.recordMidiStream(state.midiRecording, {
+    stream = midiStream,
+    clock = render.clock,
+    window = 16
+  })
+
+
+
 
 
 

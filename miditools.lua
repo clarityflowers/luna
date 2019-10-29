@@ -29,7 +29,7 @@ function miditools.toPitch(note)
   if not note then return nil end
   local octave, letter, accidental = unpack(note)
   if octave == nil then return nil end
-  local pitch = octave * 12 + letters_to_pitches[letter] + accidental
+  local pitch = (octave + 5) * 12 + letters_to_pitches[letter] + accidental
   return pitch
 end
 

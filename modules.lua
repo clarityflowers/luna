@@ -1,5 +1,6 @@
 local livereload = require "livereload2"
 local utils = livereload.init('utils.lua')
+local notes = livereload.init "notes.lua"
 
 local modules = {}
 
@@ -130,9 +131,9 @@ function modules.sequencer(state, props)
   local click = clock.beat > clock.prev_beat
   if click then
     state.position = state.position + 1
-    if state.position > #sequence then
-      state.position = 1
-    end
+  end
+  if state.position > #sequence then
+    state.position = 1
   end
   local step = utils.copy(sequence[state.position])
   sequence[state.position] = step
@@ -150,6 +151,27 @@ function modules.sequencer(state, props)
   end
   
   return events, sequence
+end
+
+
+function modules.inKey(state, props)
+  props = utils.idefaults(props, {
+    events = {},
+    key = {0, 1},
+    octave = 0
+  })
+  local result = {}
+  for _, event in ipairs(props.events) do
+    if event.type ~= "note" then
+      table.insert(result, event)
+    else
+      table.insert(result, {
+        type = "note",
+        note = notes.inKey(event.note, props.key, props.octave)
+      })
+    end
+  end
+  return result
 end
 
 

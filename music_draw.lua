@@ -15,15 +15,21 @@ draw.colors = {
 
 local colors = draw.colors
 
-function draw.text(string, font, x, y)
+function draw.font(string, font, x, y)
   local prev_font = love.graphics.getFont()
   love.graphics.setFont(constants[font .. "_font"])
   love.graphics.print(string, x, y)
   love.graphics.setFont(prev_font)
 end
 
+function draw.text(string, x, y)
+  draw.font(string, "text", x, y)
+  return y + constants.FONT_SIZE
+end
+
 function draw.monotext(string, x, y)
-  draw.text(string, "mono", x, y)
+  draw.font(string, "mono", x, y)
+  return y + constants.FONT_SIZE
 end
 
 function draw.music(character, x, y, pos, small)
@@ -36,7 +42,7 @@ function draw.music(character, x, y, pos, small)
   if small then
     offset = constants.SMALL_NOTE_OFFSET
   end
-  draw.text(constants.SYMBOLS[character], font, x, y + offset)
+  draw.font(constants.SYMBOLS[character], font, x, y + offset)
 end
 
 function draw.noteLines(x, y, pos, cleff)
@@ -44,7 +50,7 @@ function draw.noteLines(x, y, pos, cleff)
   love.graphics.setColor(0.65, 0.65, 0.65)
   x = x + constants.NOTE_FONT_SIZE * 0.13
   for i = -2, pos, -2 do
-    local line_y = draw.getStaffY(y, pos)
+    local line_y = draw.getStaffY(y, i)
     local radius = constants.NOTE_FONT_SIZE * 0.35
     love.graphics.line(x - radius, line_y, x + radius, line_y)
   end

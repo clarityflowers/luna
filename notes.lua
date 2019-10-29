@@ -1,3 +1,5 @@
+local livereload = require "livereload"
+local utils = livereload.init "utils.lua"
 local notes = {}
 
 --[[
@@ -42,36 +44,72 @@ function notes.adjustmentForKey(key)
   return adjustment
 end
 
+function notes.accidentalsForKey(key)
+  local sharps, root = unpack(key)
+  if sharps == 0 then
+    return {}
+  end
+
+  local value = 1
+  if sharps < 0 then
+    value = -1
+  end
+  local i
+  local result = {}
+  for i = value, value * math.abs(sharps), value do
+    note = modulo(value * ((math.abs(i) * 4) -2) + 2, 7, 1)
+    table.insert(result, {note, value})
+  end
+  return result
+end
+
+function notes.inKey(note, key, octave)
+  if octave == nil then
+    octave = 0
+  end
+  local sharps, root = unpack(key)
+  local octave, steps, accidental = unpack(note)
+  if accidental == nil then
+    accidental = 0
+  end
+  steps = steps + notes.adjustmentForKey(key)
+  local accidentals = {}
+  for _, accidental in ipairs(notes.accidentalsForKey(key)) do
+    local note, value = unpack(accidental)
+    accidentals[note] = value
+  end
+
+  while steps > 7 do
+    steps = steps - 7
+    octave = octave + 1
+  end
+  while steps < 0 do
+    steps = steps + 7
+    octave = octave - 1
+  end
+  accidental = accidental + (accidentals[steps] or 0)
+  return {octave, steps, accidental}
+end
+
 function notes.keyAccidentalPositions(key, cleff)
   local sharps = unpack(key)
   local result = {{}}
   if cleff == "piano" then
     table.insert(result, {})
   end
-  if sharps ~= 0 then
-    local value = 1
-    if sharps < 0 then
-      value = -1
-    end
-    local i
-    for i = value, value * math.abs(sharps), value do
-      note = value * ((math.abs(i) * 4) -2) + 2
-      staff_pos = notes.staffPosition({0, note}, cleff, {0, 1})
+  local accidentals = notes.accidentalsForKey(key)
+  for _, accidental in ipairs(accidentals) do
+    local note, value = unpack(accidental)
+    staff_pos = notes.staffPosition({0, note}, cleff, {0, 1})
       
-      local base = 1
-      if cleff == "treble" then
-        base = 3
-      end
-      staff_pos = modulo(staff_pos, 7, base)
-      table.insert(result[1], {value, staff_pos})
-      if cleff == "piano" then
-        table.insert(result[2], {value, modulo(staff_pos, 7, 15)})
-      end
+    local base = 1
+    if cleff == "treble" then
+      base = 3
     end
-  elseif sharps < 0 then
-    local i
-    for i = -1, -7, -1 do
-
+    staff_pos = modulo(staff_pos, 7, base)
+    table.insert(result[1], {value, staff_pos})
+    if cleff == "piano" then
+      table.insert(result[2], {value, modulo(staff_pos, 7, 15)})
     end
   end
   return result
