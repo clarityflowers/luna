@@ -1,6 +1,5 @@
-local livereload = require "livereload"
-local constants = require("draw_constants")
-local tools = livereload "draw_tools"
+local constants = require "draw_constants"
+local tools = require "draw_tools"
 
 local metropolis = {}
 

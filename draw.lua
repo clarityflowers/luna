@@ -1,10 +1,6 @@
 local draw = {}
 local livereload = require "livereload"
--- local metropolis = livereload "metropolis_draw"
--- local riverboat = livereload "riverboat_draw"
--- local watermill = livereload "watermill_draw"
 local rack = livereload "rack_draw"
-local modes = require "modes"
 
 local note_font = love.graphics.newFont("Bravura.otf", 30)
 local small_note_font = love.graphics.newFont("Bravura.otf", 20)

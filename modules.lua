@@ -1,6 +1,5 @@
-local livereload = require "livereload"
-local utils = livereload "utils"
-local notes = livereload "notes"
+local utils = require "utils"
+local notes = require "notes"
 
 local modules = {}
 

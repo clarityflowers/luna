@@ -1,6 +1,6 @@
 local tools = {}
 local livereload = require "livereload"
-local constants = livereload "draw_constants" 
+local constants = require "draw_constants" 
 
 function tools.drawStaffLines(x, flow_y, width, cleff, octave, play)
   love.graphics.setLineWidth(1)
