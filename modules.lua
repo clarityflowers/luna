@@ -88,6 +88,25 @@ function modules.clock(state, props)
   }
 end
 
+function modules.sampleAndHold(state, props)
+  props = utils.idefaults(props, {
+    clock = {
+      beat = 0,
+      fraction = 0.0,
+      prev_beat = 0,
+      prev_fraction = 0.0,
+    },
+    value = nil
+  })
+  utils.defaults(state, {
+    value = props.value
+  })
+  if props.clock.beat > props.clock.prev_beat then
+    state.value = props.value
+  end
+  return state.value
+end
+
 --[[
   playing_note: 
   {
@@ -119,20 +138,24 @@ function modules.sequencer(state, props)
     sequence = {}
   })
   utils.defaults(state, {
+    sampleAndHold = {},
     position = 1,
-    gate_time = props.gate_time
   })
   local sequence = utils.copy(props.sequence)
   if #sequence == 0 then
     return {}, sequence
   end
   local clock = props.clock
+
+  local gate_time = modules.sampleAndHold(state.sampleAndHold, {
+    clock = props.clock,
+    value = props.gate_time
+  })
   
   local events = {}
   local click = clock.beat > clock.prev_beat
   if click then
     state.position = state.position + 1
-    state.gate_time = props.gate_time
   end
   if state.position > #sequence then
     state.position = 1
@@ -140,7 +163,7 @@ function modules.sequencer(state, props)
   local step = utils.copy(sequence[state.position])
   sequence[state.position] = step
   if step.note then
-    if clock.fraction <= state.gate_time then
+    if clock.fraction <= gate_time then
       table.insert(events, {
         type = "note",
         note = step.note,
