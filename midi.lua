@@ -1,8 +1,8 @@
 local luamidi = require "luamidi"
-local livereload = require "livereload2"
-local metropolis = livereload.init("metropolis_midi.lua")
-local riverboat = livereload.init("riverboat.lua")
-local watermill = livereload.init("watermill_midi.lua")
+local livereload = require "livereload"
+local metropolis = livereload "metropolis_midi"
+local riverboat = livereload "riverboat"
+local watermill = livereload "watermill_midi"
 local tools = require "miditools"
 local modes = require "modes"
 

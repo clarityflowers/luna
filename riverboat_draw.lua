@@ -1,8 +1,8 @@
 local riverboat = {}
-local livereload = require "livereload2"
+local livereload = require "livereload"
 local constants = require "draw_constants"
-local miditools = livereload.init("miditools.lua")
-local tools = livereload.init("draw_tools.lua")
+local miditools = livereload "miditools"
+local tools = livereload "draw_tools"
 
 
 function riverboat.draw(state, time, fonts, selected, x, section_y, width)

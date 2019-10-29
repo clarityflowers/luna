@@ -1,6 +1,6 @@
 local timer = require "love.timer"
 -- local lfs = require "lfs"
-local livereload = require "livereload2"
+local livereload = require "livereload"
 
 
 -- Receive values sent via thread:start
@@ -15,7 +15,7 @@ end
 
 local time = nil
 
-local module = livereload.init("rack.lua")
+local module = livereload "rack"
 local running = true
 
 while running do

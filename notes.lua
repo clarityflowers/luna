@@ -1,5 +1,5 @@
 local livereload = require "livereload"
-local utils = livereload.init "utils.lua"
+local utils = livereload "utils"
 local notes = {}
 
 --[[

@@ -1,9 +1,9 @@
 local draw = {}
-local livereload = require "livereload2"
--- local metropolis = livereload.init("metropolis_draw.lua")
--- local riverboat = livereload.init("riverboat_draw.lua")
--- local watermill = livereload.init("watermill_draw.lua")
-local rack = livereload.init("rack_draw.lua")
+local livereload = require "livereload"
+-- local metropolis = livereload "metropolis_draw"
+-- local riverboat = livereload "riverboat_draw"
+-- local watermill = livereload "watermill_draw"
+local rack = livereload "rack_draw"
 local modes = require "modes"
 
 local note_font = love.graphics.newFont("Bravura.otf", 30)

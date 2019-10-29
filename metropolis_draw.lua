@@ -1,6 +1,6 @@
-local livereload = require "livereload2"
+local livereload = require "livereload"
 local constants = require("draw_constants")
-local tools = livereload.init("draw_tools.lua")
+local tools = livereload "draw_tools"
 
 local metropolis = {}
 

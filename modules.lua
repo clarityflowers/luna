@@ -1,6 +1,6 @@
-local livereload = require "livereload2"
-local utils = livereload.init('utils.lua')
-local notes = livereload.init "notes.lua"
+local livereload = require "livereload"
+local utils = livereload "utils"
+local notes = livereload "notes"
 
 local modules = {}
 

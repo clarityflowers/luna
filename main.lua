@@ -1,4 +1,4 @@
-local livereload = require "livereload2"
+local livereload = require "livereload"
 
 
 local state
@@ -53,7 +53,7 @@ function love.load()
   midithread = love.thread.newThread("midiloader.lua")
   midithread:start(midiout, midiinput)
 
-  draw = livereload.init("draw.lua")
+  draw = livereload "draw"
 
   font = love.graphics.newFont("leaguespartan-bold.ttf", 10)
   love.graphics.setFont(font)

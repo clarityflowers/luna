@@ -1,9 +1,9 @@
-local livereload = require "livereload2"
-local tools = livereload.init("draw_tools.lua")
-local constants = livereload.init("draw_constants.lua")
-local notes = livereload.init("notes.lua")
-local utils = livereload.init("utils.lua")
-local midiconst = livereload.init 'midi_constants.lua'
+local livereload = require "livereload"
+local tools = livereload "draw_tools"
+local constants = livereload "draw_constants"
+local notes = livereload "notes"
+local utils = livereload "utils"
+local midiconst = livereload "midi_constants"
 
 local idefaults = utils.idefaults
 

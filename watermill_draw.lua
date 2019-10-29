@@ -1,7 +1,7 @@
 local result = {}
-local livereload = require "livereload2"
+local livereload = require "livereload"
 local miditools = require "miditools"
-local tools = livereload.init("draw_tools.lua")
+local tools = livereload "draw_tools"
 local MIDI = require "midi_constants"
 local constants = require "draw_constants"
 

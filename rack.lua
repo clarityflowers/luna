@@ -1,9 +1,9 @@
-local livereload = require "livereload2"
-local utils = livereload.init('utils.lua')
-local modules = livereload.init('modules.lua')
-local notes = livereload.init('notes.lua')
-local constants = livereload.init 'midi_constants.lua'
-local tools = livereload.init 'miditools.lua'
+local livereload = require "livereload"
+local utils = livereload "utils"
+local modules = livereload "modules"
+local notes = livereload "notes"
+local constants = livereload "midi_constants"
+local tools = livereload "miditools"
 
 local rack = {}
 
@@ -34,7 +34,7 @@ step:
 }
 ]]
 
-local notes = livereload.init("notes.lua")
+local notes = livereload "notes"
 
 local function events_equal(a, b)
   if a.time == b.time then
