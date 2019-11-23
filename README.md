@@ -2,6 +2,8 @@
 
 Luna is a MIDI sequencer, built on top of [Löve2d](https://love2d.org), tightly-coupled with my electronic music hardware and particular my modular synthesizers.
 
+![Example](example.gif)
+
 It features:
 
 - multiple parallel sequences sent to different channels
