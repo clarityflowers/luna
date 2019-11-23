@@ -28,7 +28,7 @@ function love.load()
     borderless = true,
     centered = false,
     x = 610,
-    y = 0,
+    y = 380,
     highdpi = true,
     msaa = 16
   })
@@ -78,13 +78,11 @@ end
 function love.update_and_draw(dt)
   local error = midithread:getError()
   assert( not error, error )
-  local midi = midiout:pop()
+  local midi = midiout:peek()
   if midi then
     state.midi = midi
   end
 
-
-  
   draw.run(state, dt, midiinput, blur, canvas)
 end
 
@@ -124,6 +122,6 @@ function love.run()
     end
     
 
-		if love.timer then love.timer.sleep(0.017 - dt) end
+		if love.timer then love.timer.sleep(0.033) end
   end
 end

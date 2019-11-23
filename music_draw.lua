@@ -3,7 +3,7 @@ local tools = require "draw_tools"
 local constants = livereload "draw_constants"
 local notes = livereload "notes"
 local utils = livereload "utils"
-local midiconst = livereload "midi_constants"
+local MIDI = livereload "midi_constants"
 
 local idefaults = utils.idefaults
 
@@ -255,41 +255,51 @@ function draw.perf(props)
 end
 
 function draw.clock(state, props)
-  utils.defaults(state, {
-    tick_left = true,
-    beat = -1
-  })
   props = utils.idefaults(props, {
     clock = nil,
+    ticks = 2,
     x = 0,
     y = 0,
   })
+  local color = {love.graphics.getColor()}
   local x, y = props.x, props.y
   if not props.clock then
     return x, y
   end
   local clock = props.clock
-
-  local click = clock.beat > state.beat
-  state.beat = clock.beat
-  if click then
-    state.tick_left = not state.tick_left
-  end
   local height = constants.FONT_SIZE
   local radius = height * 0.4
-  local diameter = radius * 2
-  local circle_x = x + radius
-  if not state.tick_left then
-    circle_x = circle_x + diameter
+
+  local i
+  for i=1, props.ticks do
+    local circle_x = x + i * radius 
+    love.graphics.setColor(
+      1 - (1 - color[1]) * 0.4, 
+      1 - (1 - color[2]) * 0.4, 
+      1 - (1 - color[3]) * 0.4, 
+      color[4]
+    )
+    love.graphics.circle('fill', circle_x, y + radius + 0.1, radius, 100)
   end
-  love.graphics.circle('fill', circle_x, y + radius + 0.1, radius)
-  return x + diameter * 2, y + height
+
+  local tick = (clock.beat % props.ticks) + 1
+  local circle_x = x + (tick) * radius 
+  love.graphics.setColor(color)
+  love.graphics.circle('fill', circle_x, y + radius + 0.1, radius, 100)
+  return x + ((props.ticks + 2) * radius), y + height
 end
+
+local cc_colors = {
+  colors.highlight,
+  {0.2, 0.3, 4}
+}
 
 function draw.midiRecording(state, props)
   utils.defaults(state, {
     min = nil,
-    max = nil
+    max = nil,
+    ccs = {},
+    cc_colors_i = 1
   })
   props = utils.idefaults(props, {
     recording = {
@@ -303,6 +313,9 @@ function draw.midiRecording(state, props)
     height = 50,
     clock = nil,
   })
+  local drawn_ccs = {}
+
+  local color = {love.graphics.getColor()}
   local top = props.y
   local bottom = top + props.height
   local left = props.x
@@ -315,11 +328,15 @@ function draw.midiRecording(state, props)
     local _, event = unpack(record)
     local message, v1 = unpack(event)
 
-    if message == midiconst.NOTE_ON then
-      if state.min == nil or state.min > v1 then
+    if message == MIDI.NOTE_ON then
+      if state.min == nil then
+        state.min = v1 - 1
+        state.max = v1 + 1
+      end
+      if state.min > v1 then
         state.min = v1
       end
-      if state.max == nil or state.max < v1 then
+      if state.max < v1 then
         state.max = v1
       end
     end
@@ -334,10 +351,10 @@ function draw.midiRecording(state, props)
       time_x = time_x - time_ago / time_range * props.width + props.width
     end
 
-    local message, v1 = unpack(event)
-    if message == midiconst.NOTE_ON then
+    local message, v1, v2 = unpack(event)
+    if message == MIDI.NOTE_ON then
       on_notes[v1] = time_x
-    elseif message == midiconst.NOTE_OFF then
+    elseif message == MIDI.NOTE_OFF then
       local on_x = on_notes[v1]
       if on_x then
         on_notes[v1] = nil
@@ -347,14 +364,81 @@ function draw.midiRecording(state, props)
       local note_relative = 1.0 - (v1 - state.min) / (state.max - state.min)
       local note_y = note_relative * props.height + props.y
       love.graphics.line(on_x, note_y, time_x, note_y)
+    elseif message == MIDI.CC then
+      local cc = state.ccs[v1]
+      local prev_value = nil
+      if cc == nil then
+        cc = {
+          color = cc_colors[state.cc_colors_i],
+          value = v2,
+          left_y = nil,
+          pending_left_y = nil
+        }
+        state.ccs[v1] = cc
+        state.cc_colors_i = state.cc_colors_i + 1
+        if state.cc_colors_i > #cc_colors then
+          state.cc_colors_i = 1
+        end
+      else
+        prev_value = cc.value
+        cc.value = v2
+      end
+
+      local v2_y = utils.map(v2, 0, 127, bottom, top)
+
+      prev_cc_pos = drawn_ccs[v1]
+
+      if cc.pending_left_y and cc.pending_left_y[2] < props.recording.start_time then
+        cc.left_y = cc.pending_left_y
+        cc.pending_left_y = nil
+      end
+
+      if cc.pending_left_y == nil then
+        cc.pending_left_y = {v2_y, time}
+      end
+      
+      if prev_cc_pos == nil then
+        if cc.left_y ~= nil then
+          prev_cc_pos = {left, cc.left_y[1]}
+        end
+      end
+
+      drawn_ccs[v1] = {time_x, v2_y}
+
+      if prev_cc_pos then
+        local prev_x, prev_y = unpack(prev_cc_pos)
+
+
+        local r, g, b = unpack(cc.color)
+        love.graphics.setColor(r, g, b, 0.2)
+        love.graphics.line(prev_x, prev_y, time_x, prev_y)
+        love.graphics.line(time_x, prev_y, time_x, v2_y)
+      end
+
+      love.graphics.setColor(cc.color)
+      
+      love.graphics.circle("fill", time_x, v2_y, 2, 100)
+      love.graphics.setColor(color)
     end
+  end
+  for v1, cc in pairs(state.ccs) do
+    local position = drawn_ccs[v1]
+    local x, y = left, utils.map(cc.value, 0, 127, bottom, top)
+    if position then
+      x = position[1]
+    end
+    
+    local r, g, b = unpack(cc.color)
+    love.graphics.setColor(r, g, b, 0.2)
+    love.graphics.line(x, y, right, y)
+    love.graphics.setColor(color)
   end
   for v1, on_x in pairs(on_notes) do
     local note_relative = 1.0 - (v1 - state.min) / (state.max - state.min)
     local note_y = note_relative * props.height + props.y
     love.graphics.line(on_x, note_y, right, note_y)
   end
-  return x, y
+  return right, bottom
 end
 
 return draw

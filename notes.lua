@@ -148,4 +148,17 @@ function notes.areEqual(a, b)
   return a[1] == b[1] and a[2] == b[2] and (a[3] or 0) == (b[3] or 0)
 end
 
+function notes.normalize(note)
+  local octave, step, accidental = unpack(note)
+  while step > 7 do
+    octave = octave + 1
+    step = step - 7
+  end
+  while step < 1 do
+    octave = octave - 1
+    step = step + 7
+  end
+  return {octave, step, accidental}
+end
+
 return notes

@@ -1,4 +1,0 @@
-return {
-  "metropolis",
-  "riverboat"
-}

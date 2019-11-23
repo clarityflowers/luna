@@ -47,7 +47,7 @@ function draw.run(state, dt, midiinput, blur, canvas)
               borderless = true,
               centered = false,
               x = 610,
-              y = 0,
+            y = 380,
               highdpi = true,
               msaa = 16
             })
